@@ -168,7 +168,16 @@ def get_jwt_token(email,password,base_url):
     response = requests.post(base_url + "/auth/login", json=payload,verify=False)
     token = response.json()["token"]
     return token
+def putMetaData(token:str,BASE_URL,data:dict):  
+    header = {"authorization":f"a {token}"}
+    ret = requests.put(f"{BASE_URL}/metadata",json={"metadata":data},verify=False,headers=header)
+    return ret
 
+def queryMetaData(token:str,query:dict,BASE_URL:str):
+    header = {"authorization":f"a {token}"}
+    ret = requests.post(f"{BASE_URL}/metadata/query",headers=header,json={"query":query},verify=False)
+
+    return ret
 
 if __name__ == "__main__":
     # テスト用
