@@ -172,4 +172,4 @@ def get_jwt_token(email,password,base_url):
 
 if __name__ == "__main__":
     # テスト用
-
+    pass
