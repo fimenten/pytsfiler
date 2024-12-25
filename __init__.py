@@ -40,7 +40,7 @@ def decode2binary(file_id: str, jwt_token: str, base_url: str = "http://localhos
 
     # 2. 復号の結果をまとめるためのバッファ
     decrypted_data = b""
-
+    print(ivs)
     # 3. 各チャンクを取得して復号 → decrypted_data に連結
     for i, url in enumerate(urls):
         # (a) 暗号化ファイルチャンクをHTTP GETで取得
@@ -111,7 +111,7 @@ def upload_binary(
     }
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
-    resp = requests.post(f"{base_url}/upload", json=payload, headers=headers)
+    resp = requests.post(f"{base_url}/upload", json=payload, headers=headers,verify=False)
     resp.raise_for_status()
     meta = resp.json()
 
@@ -121,11 +121,11 @@ def upload_binary(
     aes_key_base64 = meta["aesKeyBase64"]
     iv_base64 = meta["ivBase64"]
     algorithm = meta["algorithm"]
-
+    print(iv_base64)
     # (2) 暗号化用のキーとIVをBase64デコード
     aes_key = base64.b64decode(aes_key_base64)  # 32バイト想定
     iv = base64.b64decode(iv_base64)            # 16バイトまたは12バイトなど(アルゴリズムにより)
-    
+    print(len(iv))
     # ※ サーバー側で “aes-256-cbc” と言っているなら 16バイトIV のCBCモードを想定
     if algorithm.lower() == "aes-256-cbc":
         cipher = AES.new(aes_key, AES.MODE_CBC, iv)
