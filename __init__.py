@@ -171,12 +171,13 @@ def get_jwt_token(email,password,base_url):
 def putMetaData(token:str,BASE_URL,data:dict):  
     header = {"authorization":f"a {token}"}
     ret = requests.put(f"{BASE_URL}/metadata",json={"metadata":data},verify=False,headers=header)
+    ret.raise_for_status()
     return ret
 
 def queryMetaData(token:str,query:dict,BASE_URL:str):
     header = {"authorization":f"a {token}"}
     ret = requests.post(f"{BASE_URL}/metadata/query",headers=header,json={"query":query},verify=False)
-
+    ret.raise_for_status()
     return ret
 
 if __name__ == "__main__":
