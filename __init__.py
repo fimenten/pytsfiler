@@ -174,9 +174,9 @@ def putMetaData(token:str,BASE_URL,data:dict):
     ret.raise_for_status()
     return ret
 
-def queryMetaData(token:str,query:dict,BASE_URL:str):
+def queryMetaData(token:str,query:dict,BASE_URL:str,select:dict):
     header = {"authorization":f"a {token}"}
-    ret = requests.post(f"{BASE_URL}/metadata/query",headers=header,json={"query":query},verify=False)
+    ret = requests.post(f"{BASE_URL}/metadata/query",headers=header,json={"query":query,"select":select},verify=False)
     ret.raise_for_status()
     return ret
 
