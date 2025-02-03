@@ -7,7 +7,8 @@ import base64
 import hashlib
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
-
+import os
+import pathlib
 def decode2binary(file_id: str, jwt_token: str, base_url: str = "http://localhost:3000") -> bytes:
     """
     1. /download/:fileId にアクセスしてメタデータを取得
@@ -179,6 +180,28 @@ def queryMetaData(token:str,query:dict,BASE_URL:str,select:dict):
     ret = requests.post(f"{BASE_URL}/metadata/query",headers=header,json={"query":query,"select":select},verify=False)
     ret.raise_for_status()
     return ret
+
+def recursive_dealing(p:str,email,password,host_url):
+    pathes = list(pathlib.Path(p).glob("*"))
+    files = [p for p in pathes if not p.is_dir()]
+    dirs = [p for p in pathes if p.is_dir()]
+    print(files)
+    print(dirs)
+    for p in files:
+        print(p)
+        with open(p,mode="rb") as f:
+            binary = f.read()
+        token = get_jwt_token(email,password,host_url)
+        try:
+            upload_binary(binary,str(p),token,host_url)
+            os.remove(p)
+        except Exception as e:
+            print(e)
+            pass
+    
+    for p in dirs:
+        recursive_dealing(p,email,password,host_url)
+
 
 if __name__ == "__main__":
     # テスト用
