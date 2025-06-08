@@ -187,6 +187,11 @@ def check_md5_exists(token: str, md5: str, base_url: str = "http://localhost:300
     result = resp.json()
     return len(result) > 0
 
+def fetch_all_md5id(token: str, base_url: str = "http://localhost:3000"):
+    """Fetch all stored md5 and id values from the server."""
+    resp = queryMetaData(token, {}, base_url, {"_id": 1, "md5": 1})
+    return resp.json()
+
 def recursive_dealing(p:str,email,password,host_url):
     pathes = list(pathlib.Path(p).glob("*"))
     files = [p for p in pathes if not p.is_dir()]
