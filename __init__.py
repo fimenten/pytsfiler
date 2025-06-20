@@ -144,12 +144,17 @@ def upload_binary(
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
     resp = requests.post(f"{base_url}/upload/signed", json=payload, headers=headers,verify=False)
+    
+    # Handle 409 Conflict (file already exists)
+    if resp.status_code == 409:
+        error_data = resp.json()
+        raise FileExistsError(f"File already exists: {error_data.get('error', 'Unknown error')}")
+    
     resp.raise_for_status()
     meta = resp.json()
 
-
     if "error" in meta:
-        raise FileExistsError
+        raise FileExistsError(f"Upload error: {meta['error']}")
 
 
     # signedUrl等を取得

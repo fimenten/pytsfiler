@@ -1,0 +1,16 @@
+requests>=2.25.0
+pycryptodome>=3.15.0
+
+[:python_version < "3.4"]
+pathlib2>=2.3.0
+
+[async]
+aiohttp>=3.8.0
+aiofiles>=0.8.0
+
+[dev]
+pytest>=6.0
+pytest-asyncio>=0.18.0
+black>=22.0
+flake8>=4.0
+mypy>=0.950

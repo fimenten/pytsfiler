@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+./__init__.py
+./test_with_env.py
+pytsfiler.egg-info/PKG-INFO
+pytsfiler.egg-info/SOURCES.txt
+pytsfiler.egg-info/dependency_links.txt
+pytsfiler.egg-info/requires.txt
+pytsfiler.egg-info/top_level.txt
