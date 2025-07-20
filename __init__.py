@@ -1,19 +1,27 @@
-import requests
 import base64
 import hashlib
+import logging
 import os
 import pathlib
-import logging
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
+import requests
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 
 # Import enhanced client classes
 try:
     from .client import (
-        TSFClient, TSFConfig, UploadResult, FileInfo,
-        TSFError, AuthenticationError, UploadError, DownloadError,
-        create_client, progress_printer
+        AuthenticationError,
+        DownloadError,
+        FileInfo,
+        TSFClient,
+        TSFConfig,
+        TSFError,
+        UploadError,
+        UploadResult,
+        create_client,
+        progress_printer,
     )
 except ImportError:
     # Fallback for when aiohttp is not available
@@ -23,7 +31,7 @@ except ImportError:
     FileInfo = None
     TSFError = Exception
     AuthenticationError = Exception
-    UploadError = Exception  
+    UploadError = Exception
     DownloadError = Exception
     create_client = None
     progress_printer = None
@@ -83,7 +91,7 @@ def decode2binary(file_id: str, jwt_token: str, base_url: str = "https://localho
         # (b) Base64デコードしたキーとIVを使ってAES復号器を初期化
         key = base64.b64decode(keys[i])
         iv  = base64.b64decode(ivs[i])
-        
+
         # 本例では "aes-256-cbc" を想定
         if algorithm.lower() == "aes-256-cbc":
             cipher = AES.new(key, AES.MODE_CBC, iv)
@@ -144,12 +152,12 @@ def upload_binary(
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
     resp = requests.post(f"{base_url}/upload/signed", json=payload, headers=headers,verify=False)
-    
+
     # Handle 409 Conflict (file already exists)
     if resp.status_code == 409:
         error_data = resp.json()
         raise FileExistsError(f"File already exists: {error_data.get('error', 'Unknown error')}")
-    
+
     resp.raise_for_status()
     meta = resp.json()
 
@@ -221,13 +229,13 @@ def register_user(email: str, password: str, base_url: str = "https://localhost:
     return result["token"]
 
 
-def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:3000") -> str:
+def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:3000", timeout: int = 30) -> str:
     """Authenticate user and get JWT token."""
     payload = {
         "email": email,
         "password": password
     }
-    response = requests.post(base_url + "/auth/login", json=payload, verify=False)
+    response = requests.post(base_url + "/auth/login", json=payload, verify=False, timeout=timeout)
     response.raise_for_status()
     result = response.json()
     if "error" in result:
@@ -235,11 +243,11 @@ def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:
     return result["token"]
 
 
-def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localhost:3000") -> Dict[str, Any]:
+def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localhost:3000") -> dict[str, Any]:
     """Confirm upload completion and get final file size."""
     payload = {"fileId": file_id}
     headers = {"Authorization": f"Bearer {jwt_token}"}
-    
+
     response = requests.post(f"{base_url}/upload/signed/confirm", json=payload, headers=headers, verify=False)
     response.raise_for_status()
     result = response.json()
@@ -263,23 +271,22 @@ def upload_file_direct(
     Returns:
         Dict with upload result
     """
-    import os
-    
+
     # Read file data
     with open(file_path, "rb") as f:
         file_data = f.read()
-    
+
     # Prepare the request
     filename = os.path.basename(file_path)
     files = {'file': (filename, file_data)}
     data = {'filename': filename}
     headers = {'Authorization': f'Bearer {upload_token}'}
-    
+
     # Upload file
-    response = requests.post(f"{base_url}/upload/direct", 
-                           files=files, 
-                           data=data, 
-                           headers=headers, 
+    response = requests.post(f"{base_url}/upload/direct",
+                           files=files,
+                           data=data,
+                           headers=headers,
                            verify=False)
     response.raise_for_status()
     return response.json()
@@ -307,12 +314,12 @@ def upload_binary_direct(
     files = {'file': (filename, data)}
     data_payload = {'filename': filename}
     headers = {'Authorization': f'Bearer {upload_token}'}
-    
+
     # Upload file
-    response = requests.post(f"{base_url}/upload/direct", 
-                           files=files, 
-                           data=data_payload, 
-                           headers=headers, 
+    response = requests.post(f"{base_url}/upload/direct",
+                           files=files,
+                           data=data_payload,
+                           headers=headers,
                            verify=False)
     response.raise_for_status()
     return response.json()
@@ -323,11 +330,11 @@ __all__ = [
     'TSFClient', 'TSFConfig', 'UploadResult', 'FileInfo',
     'TSFError', 'AuthenticationError', 'UploadError', 'DownloadError',
     'create_client', 'progress_printer',
-    
+
     # Original functions (backward compatibility)
     'decode2binary', 'upload_binary', 'upload_file', 'get_jwt_token', 'register_user',
     'confirm_upload', 'get_md5', 'DEFAULT_CONFIG',
-    
+
     # New direct upload functions
     'upload_file_direct', 'upload_binary_direct'
 ]
