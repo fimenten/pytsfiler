@@ -247,7 +247,7 @@ def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localh
     """Confirm upload completion and get final file size."""
     payload = {"fileId": file_id}
     headers = {"Authorization": f"Bearer {jwt_token}"}
-
+    
     response = requests.post(f"{base_url}/upload/signed/confirm", json=payload, headers=headers, verify=False)
     response.raise_for_status()
     result = response.json()
