@@ -1,5 +1,7 @@
 README.md
+__init__.py
 pyproject.toml
+test_with_env.py
 ./__init__.py
 ./test_with_env.py
 pytsfiler.egg-info/PKG-INFO

@@ -19,11 +19,13 @@ Classifier: Programming Language :: Python :: 3.11
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Internet :: WWW/HTTP :: HTTP Servers
 Classifier: Topic :: System :: Archiving
-Requires-Python: >=3.8
+Requires-Python: >=3.9
 Description-Content-Type: text/markdown
-Requires-Dist: requests>=2.25.0
-Requires-Dist: pycryptodome>=3.15.0
-Requires-Dist: pathlib2>=2.3.0; python_version < "3.4"
+Requires-Dist: requests>=2.32.3
+Requires-Dist: pycryptodome>=3.21.0
+Requires-Dist: dotenv>=0.9.9
+Requires-Dist: google-cloud-secret-manager>=2.20.0
+Requires-Dist: python-dotenv>=1.0.0
 Provides-Extra: async
 Requires-Dist: aiohttp>=3.8.0; extra == "async"
 Requires-Dist: aiofiles>=0.8.0; extra == "async"
