@@ -44,8 +44,10 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONFIG = {
     "base_url": "https://localhost:3000",  # Changed to HTTPS
     "verify_ssl": False,  # Can be changed to True in production
-    "timeout": 30,
-    "chunk_size": 8192
+    "timeout": 60,  # Increased timeout for network stability
+    "chunk_size": 8192,
+    "max_retries": 3,  # Number of retry attempts
+    "retry_backoff": 2  # Exponential backoff base
 }
 
 def decode2binary(file_id: str, jwt_token: str, base_url: str = "https://localhost:3000") -> bytes:
@@ -229,18 +231,37 @@ def register_user(email: str, password: str, base_url: str = "https://localhost:
     return result["token"]
 
 
-def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:3000", timeout: int = 30) -> str:
-    """Authenticate user and get JWT token."""
+def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:3000", timeout: int = 60, max_retries: int = 3) -> str:
+    """Authenticate user and get JWT token with retry logic."""
+    import time
+    
     payload = {
         "email": email,
         "password": password
     }
-    response = requests.post(base_url + "/auth/login", json=payload, verify=False, timeout=timeout)
-    response.raise_for_status()
-    result = response.json()
-    if "error" in result:
-        raise ValueError(f"Authentication failed: {result['error']}")
-    return result["token"]
+    
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                base_url + "/auth/login", 
+                json=payload, 
+                verify=False, 
+                timeout=timeout
+            )
+            response.raise_for_status()
+            result = response.json()
+            if "error" in result:
+                raise ValueError(f"Authentication failed: {result['error']}")
+            return result["token"]
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            if attempt < max_retries - 1:
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                logger.warning(f"TSF authentication timeout (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                time.sleep(wait_time)
+                continue
+            else:
+                logger.error(f"TSF authentication failed after {max_retries} attempts: {e}")
+                raise
 
 
 def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localhost:3000") -> dict[str, Any]:
