@@ -64,7 +64,7 @@ def decode2binary(file_id: str, jwt_token: str, base_url: str = "https://localho
     headers = {
         "Authorization": f"Bearer {jwt_token}"
     }
-    resp = requests.get(endpoint, headers=headers,verify=False)
+    resp = requests.get(endpoint, headers=headers, verify=True)
     resp.raise_for_status()  # ステータスコードが200以外なら例外を投げる
 
     data = resp.json()
@@ -153,7 +153,7 @@ def upload_binary(
     }
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
-    resp = requests.post(f"{base_url}/upload/signed", json=payload, headers=headers,verify=False)
+    resp = requests.post(f"{base_url}upload/signed", json=payload, headers=headers, verify=True)
 
     # Handle 409 Conflict (file already exists)
     if resp.status_code == 409:
@@ -223,7 +223,7 @@ def register_user(email: str, password: str, base_url: str = "https://localhost:
         "email": email,
         "password": password
     }
-    response = requests.post(base_url + "/auth/register", json=payload, verify=False)
+    response = requests.post(f"{base_url}auth/register", json=payload, verify=True)
     response.raise_for_status()
     result = response.json()
     if "error" in result:
@@ -243,9 +243,9 @@ def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:
     for attempt in range(max_retries):
         try:
             response = requests.post(
-                base_url + "/auth/login", 
+                f"{base_url}auth/login", 
                 json=payload, 
-                verify=False, 
+                verify=True, 
                 timeout=timeout
             )
             response.raise_for_status()
@@ -269,7 +269,7 @@ def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localh
     payload = {"fileId": file_id}
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
-    response = requests.post(f"{base_url}/upload/signed/confirm", json=payload, headers=headers, verify=False)
+    response = requests.post(f"{base_url}upload/signed/confirm", json=payload, headers=headers, verify=True)
     response.raise_for_status()
     result = response.json()
     if "error" in result:
@@ -304,11 +304,11 @@ def upload_file_direct(
     headers = {'Authorization': f'Bearer {upload_token}'}
 
     # Upload file
-    response = requests.post(f"{base_url}/upload/direct",
+    response = requests.post(f"{base_url}upload/direct",
                            files=files,
                            data=data,
                            headers=headers,
-                           verify=False)
+                           verify=True)
     response.raise_for_status()
     return response.json()
 
@@ -337,11 +337,11 @@ def upload_binary_direct(
     headers = {'Authorization': f'Bearer {upload_token}'}
 
     # Upload file
-    response = requests.post(f"{base_url}/upload/direct",
+    response = requests.post(f"{base_url}upload/direct",
                            files=files,
                            data=data_payload,
                            headers=headers,
-                           verify=False)
+                           verify=True)
     response.raise_for_status()
     return response.json()
 
