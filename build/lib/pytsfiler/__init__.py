@@ -2,15 +2,12 @@ import base64
 import hashlib
 import logging
 import os
-from typing import Any, Optional
-from urllib.parse import urljoin
+import pathlib
+from typing import Any, Dict, List, Optional
 
 import requests
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
-
-# SSL verification setting from environment
-SSL_VERIFY = os.getenv("SSL_VERIFY", "true").lower() in ("true", "1", "yes")
 
 # Import enhanced client classes
 try:
@@ -47,10 +44,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONFIG = {
     "base_url": "https://localhost:3000",  # Changed to HTTPS
     "verify_ssl": False,  # Can be changed to True in production
-    "timeout": 60,  # Increased timeout for network stability
-    "chunk_size": 8192,
-    "max_retries": 3,  # Number of retry attempts
-    "retry_backoff": 2  # Exponential backoff base
+    "timeout": 30,
+    "chunk_size": 8192
 }
 
 def decode2binary(file_id: str, jwt_token: str, base_url: str = "https://localhost:3000") -> bytes:
@@ -67,7 +62,7 @@ def decode2binary(file_id: str, jwt_token: str, base_url: str = "https://localho
     headers = {
         "Authorization": f"Bearer {jwt_token}"
     }
-    resp = requests.get(endpoint, headers=headers, verify=SSL_VERIFY)
+    resp = requests.get(endpoint, headers=headers,verify=False)
     resp.raise_for_status()  # ステータスコードが200以外なら例外を投げる
 
     data = resp.json()
@@ -156,7 +151,7 @@ def upload_binary(
     }
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
-    resp = requests.post(urljoin(base_url, "upload/signed"), json=payload, headers=headers, verify=SSL_VERIFY)
+    resp = requests.post(f"{base_url}/upload/signed", json=payload, headers=headers,verify=False)
 
     # Handle 409 Conflict (file already exists)
     if resp.status_code == 409:
@@ -226,7 +221,7 @@ def register_user(email: str, password: str, base_url: str = "https://localhost:
         "email": email,
         "password": password
     }
-    response = requests.post(urljoin(base_url, "auth/register"), json=payload, verify=SSL_VERIFY)
+    response = requests.post(base_url + "/auth/register", json=payload, verify=False)
     response.raise_for_status()
     result = response.json()
     if "error" in result:
@@ -234,46 +229,26 @@ def register_user(email: str, password: str, base_url: str = "https://localhost:
     return result["token"]
 
 
-def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:3000", timeout: int = 60, max_retries: int = 3) -> str:
-    """Authenticate user and get JWT token with retry logic."""
-    import time
-    
+def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:3000", timeout: int = 30) -> str:
+    """Authenticate user and get JWT token."""
     payload = {
         "email": email,
         "password": password
     }
-    
-    for attempt in range(max_retries):
-        try:
-            response = requests.post(
-                urljoin(base_url, "auth/login"), 
-                json=payload, 
-                verify=SSL_VERIFY, 
-                timeout=timeout
-            )
-            response.raise_for_status()
-            result = response.json()
-            if "error" in result:
-                raise ValueError(f"Authentication failed: {result['error']}")
-            return result["token"]
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            if attempt < max_retries - 1:
-                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
-                logger.warning(f"TSF authentication timeout (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
-                time.sleep(wait_time)
-                continue
-            else:
-                logger.error(f"TSF authentication failed after {max_retries} attempts: {e}")
-                raise
+    response = requests.post(base_url + "/auth/login", json=payload, verify=False, timeout=timeout)
+    response.raise_for_status()
+    result = response.json()
+    if "error" in result:
+        raise ValueError(f"Authentication failed: {result['error']}")
+    return result["token"]
 
 
 def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localhost:3000") -> dict[str, Any]:
     """Confirm upload completion and get final file size."""
     payload = {"fileId": file_id}
     headers = {"Authorization": f"Bearer {jwt_token}"}
-
-    response = requests.post(urljoin(base_url, "upload/signed/confirm"), json=payload, headers=headers, verify=SSL_VERIFY)
-
+    
+    response = requests.post(f"{base_url}/upload/signed/confirm", json=payload, headers=headers, verify=False)
     response.raise_for_status()
     result = response.json()
     if "error" in result:
@@ -308,11 +283,11 @@ def upload_file_direct(
     headers = {'Authorization': f'Bearer {upload_token}'}
 
     # Upload file
-    response = requests.post(urljoin(base_url, "upload/direct"),
+    response = requests.post(f"{base_url}/upload/direct",
                            files=files,
                            data=data,
                            headers=headers,
-                           verify=SSL_VERIFY)
+                           verify=False)
     response.raise_for_status()
     return response.json()
 
@@ -341,11 +316,11 @@ def upload_binary_direct(
     headers = {'Authorization': f'Bearer {upload_token}'}
 
     # Upload file
-    response = requests.post(urljoin(base_url, "upload/direct"),
+    response = requests.post(f"{base_url}/upload/direct",
                            files=files,
                            data=data_payload,
                            headers=headers,
-                           verify=SSL_VERIFY)
+                           verify=False)
     response.raise_for_status()
     return response.json()
 

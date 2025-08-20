@@ -7,7 +7,7 @@ name = "pytsfiler"
 version = "0.2.0"
 description = "Python client library for TSF (TypeScript File) server API"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
     {name = "TSF Team", email = "contact@tsfiler.com"}
@@ -28,9 +28,11 @@ classifiers = [
 ]
 
 dependencies = [
-    "requests>=2.25.0",
-    "pycryptodome>=3.15.0",
-    "pathlib2>=2.3.0; python_version<'3.4'"
+    "requests>=2.32.3",
+    "pycryptodome>=3.21.0",
+    "dotenv>=0.9.9",
+    "google-cloud-secret-manager>=2.20.0",
+    "python-dotenv>=1.0.0"
 ]
 
 [project.optional-dependencies]
