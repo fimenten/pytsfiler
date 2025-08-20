@@ -273,7 +273,6 @@ def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localh
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
     response = requests.post(urljoin(base_url, "upload/signed/confirm"), json=payload, headers=headers, verify=SSL_VERIFY)
-
     response.raise_for_status()
     result = response.json()
     if "error" in result:
