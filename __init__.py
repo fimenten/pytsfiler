@@ -4,10 +4,14 @@ import logging
 import os
 import pathlib
 from typing import Any, Dict, List, Optional
+from urllib.parse import urljoin
 
 import requests
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
+
+# SSL verification setting from environment
+SSL_VERIFY = os.getenv("SSL_VERIFY", "true").lower() in ("true", "1", "yes")
 
 # Import enhanced client classes
 try:
@@ -64,7 +68,7 @@ def decode2binary(file_id: str, jwt_token: str, base_url: str = "https://localho
     headers = {
         "Authorization": f"Bearer {jwt_token}"
     }
-    resp = requests.get(endpoint, headers=headers, verify=True)
+    resp = requests.get(endpoint, headers=headers, verify=SSL_VERIFY)
     resp.raise_for_status()  # ステータスコードが200以外なら例外を投げる
 
     data = resp.json()
@@ -153,7 +157,7 @@ def upload_binary(
     }
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
-    resp = requests.post(f"{base_url}upload/signed", json=payload, headers=headers, verify=True)
+    resp = requests.post(urljoin(base_url, "upload/signed"), json=payload, headers=headers, verify=SSL_VERIFY)
 
     # Handle 409 Conflict (file already exists)
     if resp.status_code == 409:
@@ -223,7 +227,7 @@ def register_user(email: str, password: str, base_url: str = "https://localhost:
         "email": email,
         "password": password
     }
-    response = requests.post(f"{base_url}auth/register", json=payload, verify=True)
+    response = requests.post(urljoin(base_url, "auth/register"), json=payload, verify=SSL_VERIFY)
     response.raise_for_status()
     result = response.json()
     if "error" in result:
@@ -243,9 +247,9 @@ def get_jwt_token(email: str, password: str, base_url: str = "https://localhost:
     for attempt in range(max_retries):
         try:
             response = requests.post(
-                f"{base_url}auth/login", 
+                urljoin(base_url, "auth/login"), 
                 json=payload, 
-                verify=True, 
+                verify=SSL_VERIFY, 
                 timeout=timeout
             )
             response.raise_for_status()
@@ -269,7 +273,7 @@ def confirm_upload(file_id: str, jwt_token: str, base_url: str = "https://localh
     payload = {"fileId": file_id}
     headers = {"Authorization": f"Bearer {jwt_token}"}
 
-    response = requests.post(f"{base_url}upload/signed/confirm", json=payload, headers=headers, verify=True)
+    response = requests.post(urljoin(base_url, "upload/signed/confirm"), json=payload, headers=headers, verify=SSL_VERIFY)
     response.raise_for_status()
     result = response.json()
     if "error" in result:
@@ -304,11 +308,11 @@ def upload_file_direct(
     headers = {'Authorization': f'Bearer {upload_token}'}
 
     # Upload file
-    response = requests.post(f"{base_url}upload/direct",
+    response = requests.post(urljoin(base_url, "upload/direct"),
                            files=files,
                            data=data,
                            headers=headers,
-                           verify=True)
+                           verify=SSL_VERIFY)
     response.raise_for_status()
     return response.json()
 
@@ -337,11 +341,11 @@ def upload_binary_direct(
     headers = {'Authorization': f'Bearer {upload_token}'}
 
     # Upload file
-    response = requests.post(f"{base_url}upload/direct",
+    response = requests.post(urljoin(base_url, "upload/direct"),
                            files=files,
                            data=data_payload,
                            headers=headers,
-                           verify=True)
+                           verify=SSL_VERIFY)
     response.raise_for_status()
     return response.json()
 
